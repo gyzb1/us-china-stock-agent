@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { StockData } from '@/types/stock';
-import { getStockMapping } from './stock-mapping-data';
+import { getStockMapping, hasStaticMapping } from './stock-mapping-data';
+import { generateDynamicMapping } from './dynamic-mapping-service';
 
 /**
  * 东方财富API服务
@@ -77,25 +78,59 @@ export async function getTopUSStocksByVolume(limit: number = 15): Promise<StockD
     }
 
     // 过滤掉ETF，只保留公司股票
-    const allStocks: StockData[] = response.data.data.diff
+    const filteredItems = response.data.data.diff
       .filter((item: EastMoneyStockItem) => !isETF(item.f12))
-      .map((item: EastMoneyStockItem) => {
-        const mapping = getStockMapping(item.f12);
-        return {
-          symbol: item.f12,
-          name: item.f14,
-          price: item.f2 || 0,
-          change: item.f4 || 0,
-          changePercent: item.f3 || 0,
-          volume: item.f5 || 0,
-          amount: item.f6 || 0,
-          business: mapping?.business,
-          relatedStocks: mapping?.relatedStocks
-        };
-      });
+      .slice(0, limit);
 
-    // 返回前N个
-    return allStocks.slice(0, limit);
+    // 先用静态映射创建股票数据
+    const allStocks: StockData[] = filteredItems.map((item: EastMoneyStockItem) => {
+      const mapping = getStockMapping(item.f12);
+      return {
+        symbol: item.f12,
+        name: item.f14,
+        price: item.f2 || 0,
+        change: item.f4 || 0,
+        changePercent: item.f3 || 0,
+        volume: item.f5 || 0,
+        amount: item.f6 || 0,
+        business: mapping?.business,
+        relatedStocks: mapping?.relatedStocks
+      };
+    });
+
+    // 对于没有静态映射的公司，使用动态映射
+    const unmappedStocks = allStocks.filter(stock => !stock.business);
+    if (unmappedStocks.length > 0) {
+      console.log(`Generating dynamic mappings for ${unmappedStocks.length} stocks:`, 
+        unmappedStocks.map(s => s.symbol).join(', '));
+      
+      // 并发生成动态映射（限制并发数）
+      const batchSize = 3;
+      for (let i = 0; i < unmappedStocks.length; i += batchSize) {
+        const batch = unmappedStocks.slice(i, i + batchSize);
+        const mappingPromises = batch.map(stock => 
+          generateDynamicMapping(stock.symbol, stock.name)
+        );
+        
+        const mappings = await Promise.all(mappingPromises);
+        
+        mappings.forEach((mapping, index) => {
+          if (mapping) {
+            const stock = batch[index];
+            stock.business = mapping.business;
+            stock.relatedStocks = mapping.relatedStocks;
+            console.log(`✅ Generated mapping for ${stock.symbol}: ${mapping.business}`);
+          }
+        });
+
+        // 批次间延迟，避免API限流
+        if (i + batchSize < unmappedStocks.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
+
+    return allStocks;
   } catch (error) {
     console.error('Error fetching stocks from EastMoney:', error);
     throw new Error('Failed to fetch stock data from EastMoney');

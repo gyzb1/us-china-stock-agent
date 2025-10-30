@@ -505,9 +505,24 @@ export const US_TO_STOCK_MAPPING: Record<string, StockMapping> = {
 
 /**
  * 获取美股对应的A股/港股映射信息
+ * 优先从静态映射表获取，如果不存在则返回null（由动态映射服务处理）
  */
 export function getStockMapping(symbol: string): StockMapping | null {
   return US_TO_STOCK_MAPPING[symbol.toUpperCase()] || null;
+}
+
+/**
+ * 检查是否有静态映射
+ */
+export function hasStaticMapping(symbol: string): boolean {
+  return symbol.toUpperCase() in US_TO_STOCK_MAPPING;
+}
+
+/**
+ * 获取所有已映射的股票代码
+ */
+export function getAllMappedSymbols(): string[] {
+  return Object.keys(US_TO_STOCK_MAPPING);
 }
 
 /**
