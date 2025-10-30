@@ -1,11 +1,16 @@
 /**
  * 历史追踪器 - 记录和检测首次进入Top 30的公司
+ * 自动适配本地开发和生产环境
  */
 
 import fs from 'fs';
 import path from 'path';
 
 const HISTORY_FILE = path.join(process.cwd(), 'data', 'top30-history.json');
+
+// 检测是否在只读文件系统中（如Vercel）
+let isReadOnlyFileSystem = false;
+let memoryCache: HistoryData | null = null;
 
 export interface HistoryRecord {
   symbol: string;
@@ -22,11 +27,20 @@ export interface HistoryData {
 
 /**
  * 确保数据目录存在
+ * 如果文件系统只读，标记使用内存存储
  */
 function ensureDataDir() {
-  const dataDir = path.join(process.cwd(), 'data');
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+  try {
+    const dataDir = path.join(process.cwd(), 'data');
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+  } catch (error: any) {
+    // 文件系统只读（如Vercel），使用内存存储
+    if (error.code === 'EROFS' || error.code === 'EACCES') {
+      console.warn('Read-only file system detected, using memory storage');
+      isReadOnlyFileSystem = true;
+    }
   }
 }
 
@@ -36,6 +50,20 @@ function ensureDataDir() {
 export function loadHistory(): HistoryData {
   ensureDataDir();
   
+  // 如果是只读文件系统，使用内存缓存
+  if (isReadOnlyFileSystem) {
+    if (memoryCache) {
+      return memoryCache;
+    }
+    memoryCache = {
+      lastUpdate: new Date().toISOString(),
+      symbols: new Set<string>(),
+      records: []
+    };
+    return memoryCache;
+  }
+  
+  // 本地开发环境，使用文件存储
   if (!fs.existsSync(HISTORY_FILE)) {
     return {
       lastUpdate: new Date().toISOString(),
@@ -53,6 +81,8 @@ export function loadHistory(): HistoryData {
     };
   } catch (error) {
     console.error('Error loading history:', error);
+    // 如果读取失败，标记为只读并使用内存
+    isReadOnlyFileSystem = true;
     return {
       lastUpdate: new Date().toISOString(),
       symbols: new Set<string>(),
@@ -65,15 +95,34 @@ export function loadHistory(): HistoryData {
  * 保存历史记录
  */
 export function saveHistory(history: HistoryData) {
-  ensureDataDir();
+  // 如果是只读文件系统，只保存到内存
+  if (isReadOnlyFileSystem) {
+    memoryCache = history;
+    console.log('History saved to memory (read-only file system)');
+    return;
+  }
   
-  const data = {
-    lastUpdate: history.lastUpdate,
-    symbols: Array.from(history.symbols),
-    records: history.records
-  };
+  // 本地开发环境，保存到文件
+  try {
+    ensureDataDir();
+    
+    const data = {
+      lastUpdate: history.lastUpdate,
+      symbols: Array.from(history.symbols),
+      records: history.records
+    };
 
-  fs.writeFileSync(HISTORY_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    fs.writeFileSync(HISTORY_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (error: any) {
+    // 如果写入失败，标记为只读并使用内存
+    if (error.code === 'EROFS' || error.code === 'EACCES') {
+      console.warn('Cannot write to file system, using memory storage');
+      isReadOnlyFileSystem = true;
+      memoryCache = history;
+    } else {
+      console.error('Error saving history:', error);
+    }
+  }
 }
 
 /**
