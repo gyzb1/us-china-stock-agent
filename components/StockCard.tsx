@@ -7,6 +7,20 @@ interface StockCardProps {
   stock: StockWithNews;
 }
 
+/**
+ * 清理HTML标签，只保留纯文本
+ */
+function stripHtmlTags(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, '') // 移除所有HTML标签
+    .replace(/&nbsp;/g, ' ') // 替换&nbsp;
+    .replace(/&lt;/g, '<')   // 替换&lt;
+    .replace(/&gt;/g, '>')   // 替换&gt;
+    .replace(/&amp;/g, '&')  // 替换&amp;
+    .replace(/&quot;/g, '"') // 替换&quot;
+    .trim();
+}
+
 export default function StockCard({ stock }: StockCardProps) {
   const isPositive = stock.changePercent >= 0;
   
@@ -118,7 +132,7 @@ export default function StockCard({ stock }: StockCardProps) {
                 >
                   <div className="flex items-start gap-2">
                     <span className="text-gray-400 flex-shrink-0">{idx + 1}.</span>
-                    <span className="line-clamp-2">{newsItem.title}</span>
+                    <span className="line-clamp-2">{stripHtmlTags(newsItem.title)}</span>
                   </div>
                 </a>
               )
