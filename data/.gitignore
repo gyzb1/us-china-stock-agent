@@ -1,0 +1,7 @@
+# 历史记录文件
+top30-history.json
+
+# 忽略所有数据文件
+*.json
+*.csv
+*.txt
