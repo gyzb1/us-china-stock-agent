@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { StockWithNews } from '@/types/stock';
 import { TrendingUp, TrendingDown, DollarSign, Activity, Briefcase, ArrowRightLeft } from 'lucide-react';
+import AShareAnalysisModal from './AShareAnalysisModal';
 
 interface StockCardProps {
   stock: StockWithNews;
@@ -23,8 +25,14 @@ function stripHtmlTags(html: string): string {
 
 export default function StockCard({ stock }: StockCardProps) {
   const isPositive = stock.changePercent >= 0;
+  const [selectedAShare, setSelectedAShare] = useState<{
+    code: string;
+    name: string;
+    relation: string;
+  } | null>(null);
   
   return (
+    <>
     <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
       {/* 股票基本信息 */}
       <div className="flex justify-between items-start mb-4">
@@ -87,7 +95,15 @@ export default function StockCard({ stock }: StockCardProps) {
           </div>
           <div className="grid grid-cols-1 gap-2">
             {stock.relatedStocks.map((related, idx) => (
-              <div key={idx} className="flex items-center justify-between bg-gray-50 rounded px-3 py-2">
+              <button
+                key={idx}
+                onClick={() => setSelectedAShare({
+                  code: related.code,
+                  name: related.name,
+                  relation: related.relation
+                })}
+                className="flex items-center justify-between bg-gray-50 hover:bg-blue-50 rounded px-3 py-2 transition-colors cursor-pointer group"
+              >
                 <div className="flex items-center gap-2">
                   <span className={`text-xs px-1.5 py-0.5 rounded ${
                     related.market === 'A股' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
@@ -95,10 +111,12 @@ export default function StockCard({ stock }: StockCardProps) {
                     {related.market}
                   </span>
                   <span className="text-xs font-mono text-gray-600">{related.code}</span>
-                  <span className="text-sm font-medium text-gray-900">{related.name}</span>
+                  <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600">{related.name}</span>
                 </div>
-                <span className="text-xs text-gray-500">{related.relation}</span>
-              </div>
+                <span className="text-xs text-gray-500 group-hover:text-blue-600">
+                  {related.relation} →
+                </span>
+              </button>
             ))}
           </div>
         </div>
@@ -141,5 +159,16 @@ export default function StockCard({ stock }: StockCardProps) {
         </div>
       )}
     </div>
+
+    {/* A股分析弹窗 */}
+    {selectedAShare && (
+      <AShareAnalysisModal
+        code={selectedAShare.code}
+        name={selectedAShare.name}
+        relation={selectedAShare.relation}
+        onClose={() => setSelectedAShare(null)}
+      />
+    )}
+    </>
   );
 }
