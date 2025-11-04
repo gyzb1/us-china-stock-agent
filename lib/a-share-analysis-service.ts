@@ -18,7 +18,7 @@ export interface AShareAnalysis {
   recentPerformance: string;      // 近期业绩
   growthPotential: string;        // 成长潜力
   risks: string;                  // 主要风险
-  investmentSuggestion: string;   // 投资建议
+  valuationMetrics: string;       // 估值指标分析
   generatedAt: string;
 }
 
@@ -64,7 +64,7 @@ ${relation ? `业务关系：${relation}` : ''}
   "recentPerformance": "近期业绩表现（60字以内，基于最新财报数据说明营收、利润增长情况）",
   "growthPotential": "成长潜力（60字以内，说明未来增长点和发展空间）",
   "risks": "主要风险（60字以内，说明行业风险、竞争风险等）",
-  "investmentSuggestion": "投资建议（40字以内，给出简要投资观点）"
+  "valuationMetrics": "估值指标分析（70字以内，说明PE、PB、ROE等关键指标及估值水平）"
 }
 
 重要要求：
@@ -87,7 +87,7 @@ ${relation ? `业务关系：${relation}` : ''}
   "recentPerformance": "2025年三季报营收1156亿元，同比增长15.2%，净利润78.5亿元，同比增长10.8%",
   "growthPotential": "受益于AI硬件、VR/AR设备增长，向汽车电子、医疗电子等领域拓展",
   "risks": "过度依赖苹果订单（占比超60%），消费电子需求波动，中美贸易摩擦影响",
-  "investmentSuggestion": "业绩稳健，长期成长性好，适合中长期配置"
+  "valuationMetrics": "PE(TTM) 25倍，PB 4.2倍，ROE 18.5%，估值处于行业中等水平，盈利能力强"
 }`;
 
     const response = await axios.post(
@@ -139,7 +139,7 @@ ${relation ? `业务关系：${relation}` : ''}
           recentPerformance: result.recentPerformance || '信息有限',
           growthPotential: result.growthPotential || '信息有限',
           risks: result.risks || '信息有限',
-          investmentSuggestion: result.investmentSuggestion || '信息有限',
+          valuationMetrics: result.valuationMetrics || '信息有限',
           generatedAt: new Date().toISOString()
         };
       }

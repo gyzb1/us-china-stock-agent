@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, TrendingUp, AlertTriangle, Target, Award, BarChart3, Lightbulb, Shield } from 'lucide-react';
+import { X, TrendingUp, AlertTriangle, Target, Award, BarChart3, Lightbulb, Shield, Calculator } from 'lucide-react';
 
 interface AShareAnalysis {
   code: string;
@@ -13,7 +13,7 @@ interface AShareAnalysis {
   recentPerformance: string;
   growthPotential: string;
   risks: string;
-  investmentSuggestion: string;
+  valuationMetrics: string;
 }
 
 interface AShareAnalysisModalProps {
@@ -165,13 +165,13 @@ export default function AShareAnalysisModal({ code, name, relation, onClose }: A
                 <p className="text-gray-700">{analysis.risks}</p>
               </div>
 
-              {/* 投资建议 */}
+              {/* 估值指标分析 */}
               <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-300 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Target className="text-indigo-600" size={20} />
-                  <h3 className="font-semibold text-gray-900">投资建议</h3>
+                  <Calculator className="text-indigo-600" size={20} />
+                  <h3 className="font-semibold text-gray-900">估值指标分析</h3>
                 </div>
-                <p className="text-gray-800 font-medium">{analysis.investmentSuggestion}</p>
+                <p className="text-gray-800 font-medium">{analysis.valuationMetrics}</p>
               </div>
 
               {/* 免责声明 */}
