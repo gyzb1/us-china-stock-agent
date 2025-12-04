@@ -6,7 +6,7 @@
 import { RelatedStock } from '@/types/stock';
 import axios from 'axios';
 
-const QWEN_API_KEY = process.env.QWEN_API_KEY || 'sk-fefa9fed5599445abd3532c3b8187488';
+const QWEN_API_KEY = process.env.QWEN_API_KEY;
 const QWEN_API_URL = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
 
 interface DynamicMapping {
