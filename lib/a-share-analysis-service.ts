@@ -31,6 +31,11 @@ export async function analyzeAShareCompany(
   relation?: string
 ): Promise<AShareAnalysis | null> {
   try {
+    // 检查API密钥
+    if (!QWEN_API_KEY) {
+      console.error('QWEN_API_KEY is not set in environment variables');
+      return null;
+    }
     // 获取当前日期，用于确定最新财报期
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -149,6 +154,10 @@ ${relation ? `业务关系：${relation}` : ''}
 
   } catch (error) {
     console.error(`Error analyzing A-share company ${code}:`, error);
+    if (axios.isAxiosError(error)) {
+      console.error('API Response:', error.response?.data);
+      console.error('API Status:', error.response?.status);
+    }
     return null;
   }
 }

@@ -109,6 +109,11 @@ export async function generateDynamicMapping(
   companyInfo?: string
 ): Promise<DynamicMapping | null> {
   try {
+    // 检查API密钥
+    if (!QWEN_API_KEY) {
+      console.error('QWEN_API_KEY is not set in environment variables');
+      return null;
+    }
     // 构建AI提示词
     const prompt = `请分析以下美股公司，并提供其主营业务和对应的中国A股/港股公司：
 

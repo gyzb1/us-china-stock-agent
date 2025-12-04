@@ -26,10 +26,6 @@ export async function summarizeNewsWithQwen(
   companyName: string,
   news: NewsItem[]
 ): Promise<string> {
-  if (!news || news.length === 0) {
-    return '暂无相关新闻';
-  }
-
   try {
     // 构建新闻内容
     const newsContent = news.slice(0, 5).map((item, idx) => 
